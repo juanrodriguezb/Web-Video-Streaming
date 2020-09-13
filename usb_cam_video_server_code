@@ -1,0 +1,53 @@
+sudo apt install -y ubuntu-mate-desktop    //Ubuntu Mate Install
+
+lsusb   #lectura de camara USB
+ls /dev/video*
+
+sudo apt install ros-melotic-usb-cam           //intalacion repositorio USB_CAM de ROS melotic para codificacion de video
+cat /opt/ros/melotic/share/usb_cam/launch/usb_cam-test.launch
+roslaunch usb_cam usb_cam-test.launch
+
+rostopic list    //verificacion de correcta codificacion de video por ROS
+rqt_graph
+rosrun image_view image_view image:=/usb_cam/image_raw
+rqt_image_view
+
+sudo apt install ros-melotic-web-video-server      //ejecucion del web video server
+
+mkdir -p ~/rosvid_ws/src     //creacion de entorno de trabajo, creacion de carpeta en la ruta rosvid llamada src donde estaran todos los paquetes
+cd ~/rosvid_ws
+
+catkin_make                 //copilacion de entorno de trabajo usando catkin
+source devel/setup.bash
+cd src
+catkin_create_pkg vidsrv std_msgs rospy roscpp
+
+mkdir -p vidsrv/launch      //se crea carpeta donde se encuentra el archivo encargado de los parametros de la camara
+nano vidsrv/launch/vidsrv.launch
+
+<launch>
+<node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen">
+<param name="video_device" value="/dev/video0" />   //dispositivo en el que esta encendida la camara
+<param name="image_width" value="640" />    //ancho de la imagen
+<param name="image_height" value="480" />   //altura de la imagen
+<param name="pixel_format" value="yuyv" />
+<param name="framerate" value="30" />      //los fps de la camara
+<param name="camera_frame_id" value="usb_cam" />
+<param name="io_method" value="mmap"/>
+</node>
+<node name="web_video_server" pkg="web_video_server" type="web_video_server" />
+</launch>
+
+cd ..    //se regresa a la ruta principal del entorno de trabajo
+catkin_make
+
+roslaunch vidsrv vidsrv.launch    //se ejecutan los papeles con ayuda del ejecutador de ROS
+
+//Resositorios ejecutados de ROS melodic
+
+//USB cam
+http://github.com/ros-drivers/usb_cam/blob/develop/src/usb_cam.cpp
+
+//Web video server
+http://github.com/RobotWebTools/web_video_server/blob/develop/src/web_video_server.cpp
+
